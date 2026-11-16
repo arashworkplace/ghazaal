@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>سالن مطالعه و کتابخانه غزال</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif; }
+    body { background: var(--bg); color: var(--text); margin: 0; padding: 14px; display: flex; justify-content: center; }
+    .wrapper { width: 100%; max-width: 480px; }
+    
+    .brand { text-align: center; margin-bottom: 18px; }
+    .brand h1 { font-size: 1.25rem; margin: 0 0 4px; color: #1e293b; }
+    .brand p { font-size: 0.85rem; color: #64748b; margin: 0; }
+
+    .nav-tabs { display: flex; background: #e2e8f0; padding: 4px; border-radius: 12px; gap: 4px; margin-bottom: 16px; }
+    .nav-tab { flex: 1; border: none; padding: 10px 4px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; background: transparent; color: #475569; transition: 0.2s; }
+    .nav-tab.active { background: #fff; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+
+    .card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; color: #334155; }
+    .field input, .field select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; outline: none; background: #fff; }
+    .field input:focus, .field select:focus { border-color: var(--primary); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; color: #fff; }
+    .btn:active { opacity: 0.85; }
+    .btn-green { background: var(--success); }
+    .btn-red { background: var(--danger); }
+    .btn-blue { background: var(--primary); }
+    .btn-sm { padding: 8px 12px; font-size: 0.8rem; border-radius: 8px; }
+
+    #alert-box { display: none; margin-top: 16px; padding: 14px; border-radius: 10px; font-size: 0.9rem; line-height: 1.6; text-align: center; }
+    .alert-ok { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
+    .alert-err { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+
+    .loading { opacity: 0.5; pointer-events: none; }
+    .present-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+    .section-title { font-size: 0.95rem; margin: 0 0 12px; color: #1e293b; border-right: 3px solid var(--primary); padding-right: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="brand">
+    <h1>سالن مطالعه و کتابخانه غزال</h1>
+    <p>سامانه هوشمند ثبت تردد، عضویت و امانت کتاب</p>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="setTab('tab-att', this)">ثبت تردد</button>
+    <button class="nav-tab" onclick="setTab('tab-self-reg', this)">عضویت جدید</button>
+    <button class="nav-tab" onclick="setTab('tab-book', this)">امانت کتاب</button>
+    <button class="nav-tab" onclick="setTab('tab-admin', this)">پنل مدیر</button>
+  </div>
+
+  <!-- ۱. تب تردد اعضا -->
+  <div id="tab-att" class="card tab-content">
+    <div class="field">
+      <label>کد عضویت ۵ رقمی:</label>
+      <input type="text" id="member-code" placeholder="مثال: 48291" inputmode="numeric">
+    </div>
+    <div class="grid-2">
+      <button class="btn btn-green" onclick="recordAtt('in')">🟢 ثبت ورود</button>
+      <button class="btn btn-red" onclick="recordAtt('out')">🔴 ثبت خروج</button>
+    </div>
+  </div>
+
+  <!-- ۲. تب ثبت‌نام خود دانش‌آموز -->
+  <div id="tab-self-reg" class="card tab-content" style="display:none;">
+    <div class="section-title">فرم ثبت‌نام دانش‌آموز جدید</div>
+    <div class="field"><label>نام و نام خانوادگی *:</label><input type="text" id="sr-name" placeholder="نام و نام خانوادگی"></div>
+    <div class="field"><label>پایه و رشته تحصیلی *:</label><input type="text" id="sr-grade" placeholder="مثال: دوازدهم تجربی"></div>
+    <div class="field"><label>نام پدر:</label><input type="text" id="sr-father" placeholder="نام پدر"></div>
+    <div class="field"><label>مدرسه مبدأ:</label><input type="text" id="sr-school" placeholder="نام مدرسه"></div>
+    <div class="field"><label>شماره موبایل دانش‌آموز *:</label><input type="tel" id="sr-phone" placeholder="09xxxxxxxxx"></div>
+    <div class="field"><label>شماره تماس ضروری (والدین) *:</label><input type="tel" id="sr-em-phone" placeholder="09xxxxxxxxx"></div>
+    <div class="field"><label>روزهای حضور:</label><input type="text" id="sr-days" placeholder="مثال: همه‌روزه / شنبه تا چهارشنبه"></div>
+    <div class="field">
+      <label>شیفت ثبت‌نامی:</label>
+      <select id="sr-shift">
+        <option value="تمام وقت (صبح و عصر)">تمام وقت (صبح و عصر)</option>
+        <option value="شیفت صبح">شیفت صبح</option>
+        <option value="شیفت عصر">شیفت عصر</option>
+      </select>
+    </div>
+    <button class="btn btn-blue" onclick="submitStudentSelfReg()">ثبت‌نام و دریافت کد عضویت</button>
+
+    <div id="self-reg-success" style="display:none; margin-top:16px; padding:16px; background:#ecfdf5; border-radius:12px; border:1px solid #6ee7b7; text-align:center;">
+      <h4 style="margin:0 0 6px; color:#065f46;">ثبت‌نام شما انجام شد! 🎉</h4>
+      <p style="margin:4px 0; font-size:0.85rem;">کد اختصاصی ورود و خروج شما:</p>
+      <div id="generated-code" style="font-size:2rem; font-weight:800; color:#047857; letter-spacing:4px; margin:8px 0;"></div>
+      <small style="color:#065f46; display:block;">حتماً از این کد اسکرین‌شات بگیرید؛ تمام ترددهای شما با این کد ثبت می‌شود.</small>
+    </div>
+  </div>
+
+  <!-- ۳. تب امانت کتاب -->
+  <div id="tab-book" class="card tab-content" style="display:none;">
+    <div class="section-title">ثبت امانت کتاب</div>
+    <div class="field"><label>کد عضویت:</label><input type="text" id="bk-member" placeholder="کد ۵ رقمی" inputmode="numeric"></div>
+    <div class="field"><label>عنوان دقیق کتاب:</label><input type="text" id="bk-title" placeholder="نام کتاب"></div>
+    <div class="field"><label>مدت امانت (روز):</label><input type="number" id="bk-days" value="7"></div>
+    <button class="btn btn-blue" onclick="loanBook()">ثبت امانت</button>
+  </div>
+
+  <!-- ۴. تب پنل مدیر -->
+  <div id="tab-admin" class="card tab-content" style="display:none;">
+    <div id="admin-auth">
+      <div class="field"><label>رمز عبور مدیریت:</label><input type="password" id="admin-pass" placeholder="رمز عبور مدیر"></div>
+      <button class="btn btn-blue" onclick="loginAdmin()">ورود به پنل مدیریت</button>
+    </div>
+
+    <div id="admin-panel" style="display:none;">
+      <!-- حاضرین آنلاین -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="section-title" style="margin:0;">حاضرین هم‌اکنون در سالن</div>
+        <button class="btn btn-blue btn-sm" style="width:auto;" onclick="loadPresent()">بروزرسانی</button>
+      </div>
+      <div id="present-list" style="max-height:140px; overflow-y:auto; background:#f8fafc; border-radius:8px; border:1px solid var(--border); margin-bottom:18px;"></div>
+
+      <!-- ثبت تردد دستی مدیر -->
+      <div class="section-title">ثبت ورود/خروج دستی</div>
+      <div class="field"><input type="text" id="adm-att-id" placeholder="کد عضویت دانش‌آموز" inputmode="numeric"></div>
+      <div class="grid-2" style="margin-bottom:18px;">
+        <button class="btn btn-green btn-sm" onclick="adminManualAtt('in')">ثبت ورود دستی</button>
+        <button class="btn btn-red btn-sm" onclick="adminManualAtt('out')">ثبت خروج دستی</button>
+      </div>
+
+      <!-- جستجو و ویرایش دانش‌آموز -->
+      <div class="section-title">جستجو و ویرایش اطلاعات دانش‌آموز</div>
+      <div style="display:flex; gap:8px;" class="field">
+        <input type="text" id="edit-search-query" placeholder="کد عضویت یا شماره موبایل">
+        <button class="btn btn-blue btn-sm" style="width:85px;" onclick="searchForEdit()">جستجو</button>
+      </div>
+
+      <div id="edit-form-box" style="display:none; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:18px;">
+        <input type="hidden" id="edit-code">
+        <div class="field"><label>نام و نام خانوادگی:</label><input type="text" id="ed-name"></div>
+        <div class="field"><label>پایه / رشته:</label><input type="text" id="ed-grade"></div>
+        <div class="field"><label>روزهای حضور:</label><input type="text" id="ed-days"></div>
+        <div class="field">
+          <label>شیفت:</label>
+          <select id="ed-shift">
+            <option value="تمام وقت (صبح و عصر)">تمام وقت (صبح و عصر)</option>
+            <option value="شیفت صبح">شیفت صبح</option>
+            <option value="شیفت عصر">شیفت عصر</option>
+          </select>
+        </div>
+        <div class="field"><label>موبایل دانش‌آموز:</label><input type="tel" id="ed-phone"></div>
+        <div class="field"><label>موبایل ضروری:</label><input type="tel" id="ed-em-phone"></div>
+        <div class="field"><label>مدرسه مبدأ:</label><input type="text" id="ed-school"></div>
+        <div class="field"><label>نام پدر:</label><input type="text" id="ed-father"></div>
+        <div class="field"><label>شناسه عددی تلگرام:</label><input type="text" id="ed-tg"></div>
+        <div class="field"><label>تاریخ انقضا:</label><input type="text" id="ed-exp"></div>
+        <div class="field">
+          <label>وضعیت:</label>
+          <select id="ed-status">
+            <option value="فعال">فعال</option>
+            <option value="منقضی">منقضی</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" onclick="saveEditedMember()">ذخیره تغییرات</button>
+      </div>
+
+      <!-- افزودن دستی عضو جدید -->
+      <div class="section-title">افزودن دستی عضو جدید</div>
+      <div class="field"><input type="text" id="adm-id" placeholder="کد عضویت (خالی بگذارید = ساخت کد ۵ رقمی خودکار)"></div>
+      <div class="field"><input type="text" id="adm-name" placeholder="نام و نام خانوادگی *"></div>
+      <div class="field"><input type="text" id="adm-grade" placeholder="پایه / رشته"></div>
+      <div class="field"><input type="text" id="adm-days" placeholder="روزهای حضور"></div>
+      <div class="field">
+        <select id="adm-shift">
+          <option value="تمام وقت (صبح و عصر)">تمام وقت (صبح و عصر)</option>
+          <option value="شیفت صبح">شیفت صبح</option>
+          <option value="شیفت عصر">شیفت عصر</option>
+        </select>
+      </div>
+      <div class="field"><input type="tel" id="adm-phone" placeholder="شماره موبایل"></div>
+      <div class="field"><input type="text" id="adm-exp" placeholder="تاریخ انقضا (مثال: 1405/09/30)"></div>
+      <button class="btn btn-blue" onclick="createMember()">ثبت عضو جدید</button>
+    </div>
+  </div>
+
+  <div id="alert-box"></div>
+</div>
+
+<script>
+  // لینک /exec خود را دقیقاً داخل کوتیشن زیر قرار دهید:
+  const API_URL = "https://script.google.com/macros/s/AKfycbxj7tr9UVMWR0DRTd45EX46aZPSzDCOVAhjQK5GZkbk9CjkmJqaA5QKNi_8ndJkqSvB/exec";
+
+  async function callServer(payload) {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  }
+
+  function setTab(tabId, btnEl) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).style.display = 'block';
+    btnEl.classList.add('active');
+    document.getElementById('alert-box').style.display = 'none';
+  }
+
+  function showAlert(msg, isOk) {
+    const box = document.getElementById('alert-box');
+    box.className = isOk ? 'alert-ok' : 'alert-err';
+    box.innerHTML = msg;
+    box.style.display = 'block';
+  }
+
+  async function recordAtt(type) {
+    const code = document.getElementById('member-code').value.trim();
+    if (!code) return showAlert('لطفاً کد عضویت ۵ رقمی خود را وارد کنید.', false);
+
+    document.body.classList.add('loading');
+    try {
+      const res = await callServer({ action: 'attendance', memberId: code, type: type });
+      if (res.success) {
+        let msg = res.message;
+        if (res.expiry) msg += `<br><small style="color:#047857;">اعتبار عضویت تا: ${res.expiry}</small>`;
+        showAlert(msg, true);
+        document.getElementById('member-code').value = '';
+      } else {
+        showAlert(res.message, false);
+      }
+    } catch (e) {
+      showAlert('خطا در ارتباط با سرور! اتصال اینترنت را بررسی کنید.', false);
+    }
+    document.body.classList.remove('loading');
+  }
+
+  async function submitStudentSelfReg() {
+    const data = {
+      name: document.getElementById('sr-name').value.trim(),
+      grade: document.getElementById('sr-grade').value.trim(),
+      fatherName: document.getElementById('sr-father').value.trim(),
+      school: document.getElementById('sr-school').value.trim(),
+      phone: document.getElementById('sr-phone').value.trim(),
+      emergencyPhone: document.getElementById('sr-em-phone').value.trim(),
+      days: document.getElementById('sr-days').value.trim(),
+      shift: document.getElementById('sr-shift').value
+    };
+    if (!data.name || !data.phone || !data.emergencyPhone) {
+      return showAlert('لطفاً نام، شماره موبایل خودتان و شماره ضروری را وارد کنید.', false);
+    }
+
+    document.body.classList.add('loading');
+    try {
+      const res = await callServer({ action: 'selfRegister', data: data });
+      if (res.success) {
+        document.getElementById('generated-code').innerText = res.code;
+        document.getElementById('self-reg-success').style.display = 'block';
+        showAlert('ثبت‌نام با موفقیت تکمیل شد.', true);
+        document.querySelectorAll('#tab-self-reg input').forEach(i => i.value = '');
+      } else {
+        showAlert(res.message, false);
+      }
+    } catch (e) {
+      showAlert('خطا در ثبت اطلاعات!', false);
+    }
+    document.body.classList.remove('loading');
+  }
+
+  async function loanBook() {
+    const id = document.getElementById('bk-member').value.trim();
+    const title = document.getElementById('bk-title').value.trim();
+    const days = document.getElementById('bk-days').value.trim();
+    if (!id || !title) return showAlert('کد عضویت و عنوان کتاب الزامی است.', false);
+
+    document.body.classList.add('loading');
+    try {
+      const res = await callServer({ action: 'loanBook', memberId: id, bookTitle: title, returnDays: days });
+      showAlert(res.message, res.success);
+      if (res.success) document.getElementById('bk-title').value = '';
+    } catch (e) {
+      showAlert('خطا در ثبت امانت!', false);
+    }
+    document.body.classList.remove('loading');
+  }
+
+  async function loginAdmin() {
+    const pass = document.getElementById('admin-pass').value.trim();
+    document.body.classList.add('loading');
+    try {
+      const res = await callServer({ action: 'adminLogin', adminPass: pass });
+      if (res.success) {
+        document.getElementById('admin-auth').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+        renderPresent(res.list);
+      } else {
+        showAlert(res.message, false);
+      }
+    } catch (e) {
+      showAlert('خطا در ورود به پنل!', false);
+    }
+    document.body.classList.remove('loading');
+  }
+
+  async function loadPresent() {
+    const pass = document.getElementById('admin-pass').value.trim();
+    const res = await callServer({ action: 'adminLogin', adminPass: pass });
+    if (res.success) renderPresent(res.list);
+  }
+
+  function renderPresent(list) {
+    const box = document.getElementById('present-list');
+    if (!list || list.length === 0) {
+      box.innerHTML = '<div style="padding:10px;text-align:center;color:#64748b;font-size:0.8rem;">در حال حاضر کسی در سالن نیست.</div>';
+      return;
+    }
+    box.innerHTML = list.map(item => `
+      <div class="present-item">
+        <span><b>${item.name}</b> (${item.id})</span>
+        <span style="color:#059669; font-weight:600;">ورود: ${item.entryTime}</span>
+      </div>
+    `).join('');
+  }
+
+  async function adminManualAtt(type) {
+    const pass = document.getElementById('admin-pass').value.trim();
+    const id = document.getElementById('adm-att-id').value.trim();
+    if (!id) return showAlert('کد عضویت را وارد کنید.', false);
+
+    document.body.classList.add('loading');
+    const res = await callServer({ action: 'adminManualAttendance', adminPass: pass, memberId: id, type: type });
+    showAlert(res.message, res.success);
+    if (res.success) {
+      document.getElementById('adm-att-id').value = '';
+      loadPresent();
+    }
+    document.body.classList.remove('loading');
+  }
+
+  async function searchForEdit() {
+    const pass = document.getElementById('admin-pass').value.trim();
+    const query = document.getElementById('edit-search-query').value.trim();
+    if (!query) return showAlert('کد عضویت یا شماره موبایل را وارد کنید.', false);
+
+    document.body.classList.add('loading');
+    const res = await callServer({ action: 'searchMember', adminPass: pass, query: query });
+    if (res.success) {
+      const d = res.data;
+      document.getElementById('edit-code').value = d.code;
+      document.getElementById('ed-name').value = d.name;
+      document.getElementById('ed-grade').value = d.grade;
+      document.getElementById('ed-days').value = d.days;
+      document.getElementById('ed-shift').value = d.shift;
+      document.getElementById('ed-phone').value = d.phone;
+      document.getElementById('ed-em-phone').value = d.emergencyPhone;
+      document.getElementById('ed-school').value = d.school;
+      document.getElementById('ed-father').value = d.fatherName;
+      document.getElementById('ed-tg').value = d.telegramId;
+      document.getElementById('ed-exp').value = d.expiry;
+      document.getElementById('ed-status').value = d.status;
+      document.getElementById('edit-form-box').style.display = 'block';
+    } else {
+      showAlert(res.message, false);
+    }
+    document.body.classList.remove('loading');
+  }
+
+  async function saveEditedMember() {
+    const pass = document.getElementById('admin-pass').value.trim();
+    const data = {
+      code: document.getElementById('edit-code').value,
+      name: document.getElementById('ed-name').value.trim(),
+      grade: document.getElementById('ed-grade').value.trim(),
+      days: document.getElementById('ed-days').value.trim(),
+      shift: document.getElementById('ed-shift').value,
+      phone: document.getElementById('ed-phone').value.trim(),
+      emergencyPhone: document.getElementById('ed-em-phone').value.trim(),
+      school: document.getElementById('ed-school').value.trim(),
+      fatherName: document.getElementById('ed-father').value.trim(),
+      telegramId: document.getElementById('ed-tg').value.trim(),
+      expiry: document.getElementById('ed-exp').value.trim(),
+      status: document.getElementById('ed-status').value
+    };
+
+    document.body.classList.add('loading');
+    const res = await callServer({ action: 'updateMember', adminPass: pass, data: data });
+    showAlert(res.message, res.success);
+    if (res.success) document.getElementById('edit-form-box').style.display = 'none';
+    document.body.classList.remove('loading');
+  }
+
+  async function createMember() {
+    const pass = document.getElementById('admin-pass').value.trim();
+    const data = {
+      id: document.getElementById('adm-id').value.trim(),
+      name: document.getElementById('adm-name').value.trim(),
+      grade: document.getElementById('adm-grade').value.trim(),
+      days: document.getElementById('adm-days').value.trim(),
+      shift: document.getElementById('adm-shift').value,
+      phone: document.getElementById('adm-phone').value.trim(),
+      expiry: document.getElementById('adm-exp').value.trim()
+    };
+    if (!data.name) return showAlert('نام عضو الزامی است.', false);
+
+    document.body.classList.add('loading');
+    const res = await callServer({ action: 'adminRegister', adminPass: pass, data: data });
+    showAlert(res.message, res.success);
+    if (res.success) document.querySelectorAll('#admin-panel input:not(#admin-pass)').forEach(i => i.value = '');
+    document.body.classList.remove('loading');
+  }
+</script>
+</body>
+</html>
